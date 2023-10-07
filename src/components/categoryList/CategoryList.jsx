@@ -71,9 +71,6 @@ const CategoryList = () => {
           />
           ideas
         </Link>
-
-        
-
         <Link href="/blog" className={`${styles.category} ${styles.life}`}>
           <Image
             src="/style.png"
@@ -84,7 +81,6 @@ const CategoryList = () => {
           />
           life
         </Link>
-        
       </div>
     </div>
   )
