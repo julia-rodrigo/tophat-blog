@@ -25,34 +25,6 @@
     border-radius: 10px;
 }
 
-.category.coding {
-    background-color: #6b57ff31;
-}
-
-.category.animation {
-    background-color: #da85c731;
-}
-
-.category.games {
-    background-color: #a8ff5731;
-}
-
-.category.music {
-    background-color: #57ffc431;
-}
-
-.category.things {  /* quote, building, buying stuff */
-    background-color: #ffab5731;
-}
-
-.category.ideas { /* game stories */
-    background-color: #57f9ff31;
-}
-
-.category.life { /* food, travels, handstands */
-    background-color: #ffe65731 ;
-}
-
 .image {
     border-radius: 50%;
 }
