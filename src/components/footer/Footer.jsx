@@ -14,7 +14,7 @@ const Footer = () => {
         <p className={styles.description}>
           To truly know someone, let them use your internet for an hour.
           Then turn off the internet and observe deeply with keen interest. 
-          Observe the rage and perform a table flip.
+          With a table flip, the truth shalth be revealed.
         </p>
         <div className={styles.icons}>
           <Image src="/facebook.png" alt="facebook" width={18} height={18} />
