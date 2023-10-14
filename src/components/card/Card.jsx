@@ -2,11 +2,16 @@ import Image from "next/image";
 import styles from "./card.module.css";
 import Link from "next/link";
 
-const Card = ({ cardLink, image, date, category, title, description}) => {
+const Card = ({ key, cardLink, image, date, category, title, description}) => {
   return (
-    <div className={styles.container}>
+    <div className={styles.container} key={key}>
         <div className={styles.imageContainer}>
-            <Image src={image} alt="" fill className={styles.image}/>
+            {
+                image?
+                    <Image src={image} alt="" fill className={styles.image}/>
+                    : <></>
+
+            }
         </div>
         <div className={styles.textContainer}>
             <div className={styles.details}>

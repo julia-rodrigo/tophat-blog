@@ -6,13 +6,16 @@ import Image from 'next/image';
 const Category = ({ catLink, name, colour, image}) => {
   return (
     <Link href={catLink} className={`${styles.category}`} style={{ background: colour}}>
-        <Image
-            src={image}
-            alt=""
-            width={32}
-            height={32}
-            className={styles.image}
-        />
+        {
+          image && 
+          <Image
+              src={image}
+              alt=""
+              width={32}
+              height={32}
+              className={styles.image}
+          />
+        }
         {name}
     </Link>
   )

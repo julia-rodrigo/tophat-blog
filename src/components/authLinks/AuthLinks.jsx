@@ -8,9 +8,8 @@ import { signOut, useSession } from 'next-auth/react';
 const AuthLinks = () => {
   const [ open, setOpen ] = useState(false);
 
-  const { data, status } = useSession();
+  const { status } = useSession();
 
-  console.log(data)
 
   return (
     <>

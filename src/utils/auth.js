@@ -1,11 +1,10 @@
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import GithubProvider from "next-auth/providers/github"
 import GoogleProvider from "next-auth/providers/google"
-// import prisma from './connect';
+import prisma from './connect';
 import NextAuth from "next-auth";
-import { PrismaClient } from '@prisma/client'
-
-let prisma = new PrismaClient();
+// import { PrismaClient } from '@prisma/client'
+// let prisma = new PrismaClient();
 
 export const authOptions = {
     // Configure one or more authentication providers
@@ -20,10 +19,10 @@ export const authOptions = {
         clientSecret: process.env.GITHUB_SECRET,
       }),
     ],
-    pages: {
-      signIn: "/login"
-    },
     debug: process.env.NODE_ENV === 'development',
+    pages: {
+      signIn: "/"
+    },
     session: {
       strategy: 'jwt',
     },
