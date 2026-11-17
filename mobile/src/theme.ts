@@ -1,37 +1,43 @@
-import { useColorScheme } from 'react-native';
+import { Platform, useColorScheme } from 'react-native';
 import type { Mood } from './lib/types';
 
-/* Relaxed, neutral, pale. Built on the TopHat blog palette (white / #f0f0f0 / #626262, navy dark mode). */
+/* Notepad: ruled paper, a red margin line, pen-blue ink, sticky-note colours for pages. */
 const light = {
-  bg: '#f6f6f4',
+  bg: '#f3f2ee',
+  paper: '#fdfcf8',
   surface: '#ffffff',
-  sunk: '#f0f0f0',
-  ink: '#1c1c1c',
-  muted: '#626262',
-  line: '#e3e3e0',
-  rec: '#d9475f',
-  recSoft: '#f8dde2',
-  accent: '#4a7fb8',
-  accentSoft: '#e1ecf8',
-  ok: '#1a8917',
+  sunk: '#efeee9',
+  ink: '#1f2430',
+  muted: '#6b6f7a',
+  line: '#e2e0d8',
+  rule: '#dbe6f2',
+  margin: '#f0b9c0',
+  rec: '#e0485f',
+  recSoft: '#fbe0e4',
+  accent: '#3d6fb6',
+  accentSoft: '#e2ecf8',
+  ok: '#2f9a5b',
   music: '#1db954',
-  mood: { happy: '#fff3d6', calm: '#ddeefb', tired: '#ece6f5', proud: '#d9f7ec', sad: '#e7ecf2' } as Record<Mood, string>,
+  mood: { happy: '#fff1c2', calm: '#dceefe', tired: '#ebe4f7', proud: '#d7f5e8', sad: '#e6ebf2' } as Record<Mood, string>,
 };
 
 const dark: typeof light = {
-  bg: '#0f172a',
-  surface: '#1f273a',
-  sunk: '#273147',
-  ink: '#dddddd',
-  muted: '#a6a6a6',
-  line: '#2e3850',
-  rec: '#ef6b80',
-  recSoft: '#3a2030',
-  accent: '#8fb8e8',
-  accentSoft: '#22314d',
-  ok: '#4cc38a',
+  bg: '#0d1424',
+  paper: '#141c2f',
+  surface: '#1b2439',
+  sunk: '#222c44',
+  ink: '#e6e6e6',
+  muted: '#a3a8b4',
+  line: '#2b3550',
+  rule: '#22304a',
+  margin: '#5a2c38',
+  rec: '#f0677c',
+  recSoft: '#3b2030',
+  accent: '#8fb5ec',
+  accentSoft: '#21314f',
+  ok: '#56c98a',
   music: '#3ddc76',
-  mood: { happy: '#3a3322', calm: '#1f2f45', tired: '#2c2742', proud: '#1b3833', sad: '#26303f' },
+  mood: { happy: '#3b3420', calm: '#1d3047', tired: '#2c2744', proud: '#193a30', sad: '#262f3f' },
 };
 
 export type Theme = typeof light;
@@ -40,5 +46,11 @@ export function useTheme(): Theme {
   return useColorScheme() === 'dark' ? dark : light;
 }
 
+/** Handwritten face for titles and dates. Loaded with expo-font on Android, from Google Fonts on the web. */
+export const HAND = Platform.OS === 'web' ? 'Caveat, cursive' : 'Caveat_700Bold';
+
+/** Line height of the ruled paper. Text sits on these lines. */
+export const RULE = 30;
+
 /** Pale colours people can pick for "one colour" mood mode. */
-export const SINGLE_COLOURS = ['#ddeefb', '#fff3d6', '#d9f7ec', '#ece6f5', '#f8dde2', '#f0f0f0'];
+export const SINGLE_COLOURS = ['#dceefe', '#fff1c2', '#d7f5e8', '#ebe4f7', '#fbe0e4', '#efeee9'];

@@ -2,15 +2,15 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { H1, Muted } from '../../components/ui';
+import { Muted } from '../../components/ui';
 import { dateKey, monthTitle, shortDate, streak } from '../../lib/dates';
 import { useT } from '../../lib/i18n';
 import { useDiary } from '../../lib/store';
-import { useTheme } from '../../theme';
+import { HAND, useTheme } from '../../theme';
 
 const DOW = { en: ['M', 'T', 'W', 'T', 'F', 'S', 'S'], ja: ['月', '火', '水', '木', '金', '土', '日'] };
 
-export default function DiaryScreen() {
+export default function CalendarScreen() {
   const t = useTheme();
   const s = useT();
   const insets = useSafeAreaInsets();
@@ -34,8 +34,9 @@ export default function DiaryScreen() {
     return out;
   }, [ym]);
 
+  const prefix = `${ym.y}-${String(ym.m + 1).padStart(2, '0')}`;
   const list = Object.values(days)
-    .filter((d) => d.entries.length)
+    .filter((d) => d.entries.length && d.date.startsWith(prefix))
     .sort((a, b) => b.date.localeCompare(a.date));
 
   const shift = (n: number) => setYm(({ y, m }) => ({ y: m + n < 0 ? y - 1 : m + n > 11 ? y + 1 : y, m: (m + n + 12) % 12 }));
@@ -53,14 +54,14 @@ export default function DiaryScreen() {
           <Text style={{ fontSize: 22, color: t.muted }}>‹</Text>
         </Pressable>
         <View style={{ flex: 1, alignItems: 'center' }}>
-          <H1>{monthTitle(ym.y, ym.m, lang)}</H1>
+          <Text style={{ fontFamily: HAND, fontSize: 34, color: t.ink }}>{monthTitle(ym.y, ym.m, lang)}</Text>
         </View>
         <Pressable onPress={() => shift(1)} hitSlop={10} accessibilityLabel="Next month">
           <Text style={{ fontSize: 22, color: t.muted }}>›</Text>
         </Pressable>
       </View>
       <Text style={{ textAlign: 'center', color: run ? t.rec : t.muted, fontWeight: '600' }}>
-        {run ? `${run} ${s.streak}` : lang === 'ja' ? '今日話して連続記録をスタート' : 'Record today to start a streak'}
+        {run ? `🔥 ${run} ${s.streak}` : lang === 'ja' ? '今日書いて連続記録をスタート' : 'Write today to start a streak'}
       </Text>
 
       <View style={styles.grid}>
@@ -73,7 +74,7 @@ export default function DiaryScreen() {
           k ? (
             <Pressable
               key={k}
-              onPress={() => router.push(k === today ? '/' : `/day/${k}`)}
+              onPress={() => router.push(`/day/${k}`)}
               style={[
                 styles.cell,
                 styles.day,
@@ -90,14 +91,14 @@ export default function DiaryScreen() {
       </View>
 
       <View style={{ gap: 8 }}>
-        {list.length === 0 ? <Muted>{s.nothingYet}</Muted> : null}
+        {list.length === 0 ? <Muted style={{ textAlign: 'center' }}>{lang === 'ja' ? 'この月はまだページがありません。' : 'No pages this month yet.'}</Muted> : null}
         {list.map((d) => (
           <Pressable
             key={d.date}
-            onPress={() => router.push(d.date === today ? '/' : `/day/${d.date}`)}
-            style={[styles.row, { backgroundColor: t.surface, borderColor: t.line }]}
+            onPress={() => router.push(`/day/${d.date}`)}
+            style={[styles.row, { backgroundColor: t.paper, borderColor: t.line }]}
           >
-            <Text style={{ flex: 1, color: t.ink, fontWeight: '700' }} numberOfLines={1}>
+            <Text style={{ flex: 1, color: t.ink, fontFamily: HAND, fontSize: 22 }} numberOfLines={1}>
               {d.name || (lang === 'ja' ? '無題の日' : 'Untitled day')}
             </Text>
             <Text style={{ color: t.muted, fontSize: 12, fontVariant: ['tabular-nums'] }}>
@@ -117,5 +118,5 @@ const styles = StyleSheet.create({
   dow: { textAlign: 'center', fontSize: 11, aspectRatio: undefined, paddingVertical: 4 },
   day: { borderRadius: 12, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', gap: 3, margin: 0 },
   dot: { width: 5, height: 5, borderRadius: 3 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 12, borderWidth: 1 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, borderWidth: 1 },
 });

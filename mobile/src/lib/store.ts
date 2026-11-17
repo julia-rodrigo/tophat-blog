@@ -17,7 +17,7 @@ type NewEntry = Omit<Entry, 'id' | 'createdAt' | 'time'> & { time?: string };
 
 interface DiaryState extends DiaryData {
   /** Saves a spoken recording. Detects "add to my to-do…" and "idea:". */
-  addSpoken: (input: { text: string; audioUris?: string[]; durationSec?: number; source?: 'voice' | 'drive' }) => Entry | null;
+  addSpoken: (input: { text: string; audioUris?: string[]; durationSec?: number; source?: Todo['source'] }) => Entry | null;
   addEntry: (entry: NewEntry, date?: string) => Entry;
   updateEntry: (date: string, id: string, change: { text?: string; time?: string }) => void;
   deleteEntry: (date: string, id: string) => void;
@@ -33,7 +33,7 @@ function withAutoName(day: Day): Day {
   if (day.nameByUser) return day;
   const spoken = [...day.entries]
     .sort((a, b) => a.time.localeCompare(b.time))
-    .filter((e) => e.kind === 'voice' || e.kind === 'idea')
+    .filter((e) => e.kind === 'voice' || e.kind === 'note' || e.kind === 'idea')
     .map((e) => e.text);
   const fallback = [...day.entries].sort((a, b) => a.time.localeCompare(b.time)).map((e) => e.text);
   return { ...day, name: suggestDayName(spoken.length ? spoken : fallback) };
@@ -56,7 +56,7 @@ export const useDiary = create<DiaryState>()(
         const parsed = trimmed ? parseSpoken(trimmed) : { kind: 'voice' as const, text: '' };
         if (parsed.kind === 'todo') get().addTodo(parsed.text, source);
         return get().addEntry({
-          kind: parsed.kind,
+          kind: parsed.kind === 'voice' && source === 'typed' ? 'note' : parsed.kind,
           text: parsed.text,
           audioUris,
           durationSec,

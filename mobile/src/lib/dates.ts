@@ -32,6 +32,11 @@ export function longDate(key: string, lang: Lang): string {
   });
 }
 
+/** "Tuesday, 17 November" without the year. */
+export function dayTitle(key: string, lang: Lang): string {
+  return parseKey(key).toLocaleDateString(locale(lang), { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
 export function shortDate(key: string, lang: Lang): string {
   return parseKey(key).toLocaleDateString(locale(lang), { day: 'numeric', month: 'short' });
 }

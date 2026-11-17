@@ -19,9 +19,9 @@ export const PLANS: Plan[] = [
     per: null,
     ai: false,
     features: [
-      'Record and turn speech into text (English, Japanese)',
+      'Write or talk: speech turns into text (English, Japanese)',
       'Day pages, calendar, streaks, daily reminder',
-      'Voice to-do and drive mode',
+      'Voice to-do list and stats',
       'Photos, videos, sounds and songs',
       'Backup on your phone',
       'Download each day (text + photos)',

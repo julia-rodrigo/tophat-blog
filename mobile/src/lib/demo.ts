@@ -45,7 +45,7 @@ export function seedExamplesOnWeb(): void {
     ];
     const todos: Todo[] = [
       { id: newId(), text: 'Book dentist appointment for next week', done: false, createdAt: new Date().toISOString(), source: 'voice' },
-      { id: newId(), text: 'Buy printer ink', done: false, createdAt: new Date(Date.now() - 864e5).toISOString(), source: 'drive' },
+      { id: newId(), text: 'Buy printer ink', done: false, createdAt: new Date(Date.now() - 864e5).toISOString(), source: 'voice' },
       { id: newId(), text: 'Call mum back', done: true, createdAt: new Date(Date.now() - 2 * 864e5).toISOString(), source: 'voice' },
     ];
     useDiary.setState({

@@ -4,6 +4,7 @@ export type MoodMode = 'auto' | 'single' | 'off';
 
 export type EntryKind =
   | 'voice' // spoken, turned into text
+  | 'note' // typed
   | 'idea'
   | 'todo' // a voice note that was also added to the to-do list
   | 'photo'

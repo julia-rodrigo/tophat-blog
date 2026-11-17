@@ -2,19 +2,20 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Logo } from '../../components/Logo';
-import { Button, Chip, H1, Muted, Section, Segmented } from '../../components/ui';
-import { backupNowToFolder, lastAutoBackup, restoreFromFile } from '../../lib/files';
-import { useBackupStatus } from '../../lib/backupStatus';
-import { showDialog } from '../../lib/dialog';
-import { useT } from '../../lib/i18n';
-import { useDiary } from '../../lib/store';
-import type { Lang, MoodMode } from '../../lib/types';
-import { SINGLE_COLOURS, useTheme } from '../../theme';
+import { Logo } from '../components/Logo';
+import { BackIcon } from '../components/icons';
+import { Button, Chip, H1, Muted, Section, Segmented } from '../components/ui';
+import { backupNowToFolder, lastAutoBackup, restoreFromFile } from '../lib/files';
+import { useBackupStatus } from '../lib/backupStatus';
+import { showDialog } from '../lib/dialog';
+import { useT } from '../lib/i18n';
+import { useDiary } from '../lib/store';
+import type { Lang, MoodMode } from '../lib/types';
+import { SINGLE_COLOURS, useTheme } from '../theme';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
-export default function YouScreen() {
+export default function SettingsScreen() {
   const t = useTheme();
   const s = useT();
   const insets = useSafeAreaInsets();
@@ -47,6 +48,9 @@ export default function YouScreen() {
 
   return (
     <ScrollView style={{ backgroundColor: t.bg }} contentContainerStyle={{ padding: 16, paddingTop: insets.top + 16, gap: 14 }}>
+      <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/stats'))} hitSlop={10} accessibilityLabel="Back" accessibilityRole="button">
+        <BackIcon color={t.ink} />
+      </Pressable>
       <View style={styles.brand}>
         <Logo size={44} />
         <View>

@@ -1,6 +1,8 @@
 import { Stack } from 'expo-router/stack';
 import { StatusBar } from 'expo-status-bar';
+import { Caveat_700Bold, useFonts } from '@expo-google-fonts/caveat';
 import { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { writeAutoBackup } from '../lib/files';
 import { syncReminder } from '../lib/reminders';
 import { useDiary } from '../lib/store';
@@ -39,9 +41,12 @@ function useReminderSync() {
 
 export default function RootLayout() {
   const t = useTheme();
+  // Android loads the handwriting font from the app; the web page loads it from Google Fonts.
+  const [fontsReady] = useFonts(Platform.OS === 'web' ? {} : { Caveat_700Bold });
   useAutoBackup();
   useReminderSync();
   useEffect(() => seedExamplesOnWeb(), []);
+  if (!fontsReady) return null;
   return (
     <>
       <StatusBar style="auto" />
@@ -53,7 +58,7 @@ export default function RootLayout() {
       >
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="day/[date]" />
-        <Stack.Screen name="drive" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+        <Stack.Screen name="settings" />
         <Stack.Screen name="plans" options={{ presentation: 'modal' }} />
       </Stack>
       <DialogHost />
