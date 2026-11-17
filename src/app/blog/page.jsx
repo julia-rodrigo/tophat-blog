@@ -1,6 +1,6 @@
 import CardList from "@/components/cardList/CardList";
 import styles from "./blogPage.module.css";
-import Menu from "@/components/menu/Menu";
+import Menu from "@/components/Menu/Menu";
 
 {/* <div className={styles.container}>
 <h1 className={styles.title} style={{ background: color }}>{title}</h1>

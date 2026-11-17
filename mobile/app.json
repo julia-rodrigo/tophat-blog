@@ -1,0 +1,77 @@
+{
+  "expo": {
+    "name": "Log Day5",
+    "slug": "log-day5",
+    "scheme": "logday5",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#f6f6f4",
+    "android": {
+      "package": "app.logday5",
+      "allowBackup": true,
+      "adaptiveIcon": {
+        "backgroundColor": "#e1ecf8",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "app.logday5"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "backgroundColor": "#f6f6f4",
+          "dark": {
+            "backgroundColor": "#0f172a"
+          }
+        }
+      ],
+      "expo-sharing",
+      "expo-font",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Log Day5 uses the microphone to record your diary."
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Log Day5 uses the microphone to record your diary.",
+          "speechRecognitionPermission": "Log Day5 turns what you say into diary text.",
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox",
+            "com.google.android.as"
+          ]
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Log Day5 adds your photos and videos to your diary pages."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#d9475f"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}
