@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { useT } from '../lib/i18n';
 import { useDiary } from '../lib/store';
@@ -22,6 +22,18 @@ export function RecordPanel({ source = 'voice', big = false }: { source?: 'voice
   const addSpoken = useDiary((st) => st.addSpoken);
   const rec = useRecorder();
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
+  const [typing, setTyping] = useState(false);
+  const [typed, setTyped] = useState('');
+  const lang = useDiary((st) => st.settings.lang);
+  const showTyping = typing || !rec.canTalk;
+
+  const saveTyped = () => {
+    const entry = addSpoken({ text: typed, source });
+    if (entry) {
+      setTyped('');
+      setSavedMsg(entry.kind === 'todo' ? `${s.saved} · ${s.todo}` : s.saved);
+    }
+  };
 
   const onMain = async () => {
     if (rec.state === 'idle') {
@@ -88,6 +100,39 @@ export function RecordPanel({ source = 'voice', big = false }: { source?: 'voice
         </Text>
       )}
       {rec.error ? <Text style={{ color: t.rec, fontSize: 13, textAlign: 'center' }}>{rec.error}</Text> : null}
+      {!active && showTyping ? (
+        <View style={styles.typeRow}>
+          {!rec.canTalk ? (
+            <Text style={{ color: t.muted, fontSize: 12, textAlign: 'center' }}>
+              {lang === 'ja' ? 'ここでは音声入力が使えません。入力してください。' : "Voice isn't available here, so type what you'd say."}
+            </Text>
+          ) : null}
+          <TextInput
+            value={typed}
+            onChangeText={setTyped}
+            onSubmitEditing={saveTyped}
+            placeholder={lang === 'ja' ? '例：やることに追加 牛乳を買う' : 'e.g. "Add to my to-do: buy milk"'}
+            placeholderTextColor={t.muted}
+            multiline
+            style={[styles.typeInput, { color: t.ink, borderColor: t.line, backgroundColor: t.surface }]}
+          />
+          <Pressable
+            onPress={saveTyped}
+            disabled={!typed.trim()}
+            style={[styles.typeSave, { backgroundColor: t.accent, opacity: typed.trim() ? 1 : 0.5 }]}
+            accessibilityRole="button"
+          >
+            <Text style={{ color: t.surface, fontWeight: '600' }}>{s.save}</Text>
+          </Pressable>
+        </View>
+      ) : null}
+      {!active && rec.canTalk && !big ? (
+        <Pressable onPress={() => setTyping((v) => !v)} hitSlop={6} accessibilityRole="button">
+          <Text style={{ color: t.accent, fontSize: 12 }}>
+            {typing ? (lang === 'ja' ? '入力を閉じる' : 'Hide typing') : lang === 'ja' ? '入力する' : 'Type instead'}
+          </Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -96,5 +141,8 @@ const styles = StyleSheet.create({
   wrap: { alignItems: 'center', gap: 12, paddingVertical: 8 },
   mic: { alignItems: 'center', justifyContent: 'center' },
   live: { alignSelf: 'stretch', borderRadius: 14, padding: 12, gap: 2 },
+  typeRow: { alignSelf: 'stretch', gap: 8 },
+  typeInput: { borderWidth: 1, borderRadius: 12, padding: 10, fontSize: 15, minHeight: 56, textAlignVertical: 'top' },
+  typeSave: { alignSelf: 'flex-end', borderRadius: 10, paddingHorizontal: 18, paddingVertical: 9 },
   pause: { alignSelf: 'flex-start', marginTop: 10, borderWidth: 1, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 6 },
 });

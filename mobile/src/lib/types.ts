@@ -57,6 +57,8 @@ export interface Settings {
   singleColor: string;
   keepAudio: boolean;
   reminder: { on: boolean; hour: number; minute: number };
+  /** true while the web preview shows example entries */
+  exampleData?: boolean;
 }
 
 export interface DiaryData {

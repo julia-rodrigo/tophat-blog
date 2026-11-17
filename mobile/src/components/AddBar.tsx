@@ -1,8 +1,9 @@
 import { RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder, useAudioRecorderState } from 'expo-audio';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
-import { Alert, Modal, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, StyleSheet, Text, TextInput, View } from 'react-native';
 import { keepFile } from '../lib/files';
+import { showDialog } from '../lib/dialog';
 import { useT } from '../lib/i18n';
 import { useDiary } from '../lib/store';
 import { useTheme } from '../theme';
@@ -21,7 +22,8 @@ export function AddBar() {
   const [songTitle, setSongTitle] = useState('');
   const [songLink, setSongLink] = useState('');
 
-  const pickMedia = async () => {
+  const pickMedia = () => pickMediaInner().catch((e) => showDialog(s.addPhoto, String(e?.message ?? e)));
+  const pickMediaInner = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images', 'videos'], allowsMultipleSelection: true, quality: 0.85 });
     if (res.canceled) return;
     for (const a of res.assets) {
@@ -30,7 +32,11 @@ export function AddBar() {
     }
   };
 
-  const toggleSound = async () => {
+  const toggleSound = () =>
+    toggleSoundInner().catch(() =>
+      showDialog(lang === 'ja' ? 'まわりの音' : 'Sound around me', lang === 'ja' ? 'この端末では録音できませんでした。' : "Couldn't record here. Sound clips work in the Android app."),
+    );
+  const toggleSoundInner = async () => {
     if (recState.isRecording) {
       await recorder.stop();
       await setAudioModeAsync({ allowsRecording: false });
@@ -43,7 +49,7 @@ export function AddBar() {
     }
     const perm = await requestRecordingPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert('Microphone', 'Turn on the microphone permission in Android settings to record sounds.');
+      showDialog('Microphone', 'Turn on the microphone permission in Android settings to record sounds.');
       return;
     }
     await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });

@@ -1,11 +1,13 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { dateKey, longDate } from '../lib/dates';
 import { saveDayToFolder, shareDay } from '../lib/files';
+import { showDialog } from '../lib/dialog';
 import { useT } from '../lib/i18n';
 import { useDiary } from '../lib/store';
+import { ExampleBanner } from './ExampleBanner';
 import { useTheme } from '../theme';
 import { AddBar } from './AddBar';
 import { EntryCard } from './EntryCard';
@@ -30,21 +32,21 @@ export function DayView({ date, showBrand }: { date: string; showBrand?: boolean
 
   const download = () => {
     if (!day || !day.entries.length) {
-      Alert.alert(s.download, s.nothingYet);
+      showDialog(s.download, s.nothingYet);
       return;
     }
-    Alert.alert(
+    showDialog(
       s.download,
       lang === 'ja' ? 'この日の文章と写真を .zip にまとめます。' : 'One .zip with this day as text plus its photos.',
       [
         { text: s.cancel, style: 'cancel' },
-        { text: lang === 'ja' ? '共有' : 'Share', onPress: () => shareDay(day, lang).catch((e) => Alert.alert(s.download, String(e?.message ?? e))) },
+        { text: lang === 'ja' ? '共有' : 'Share', onPress: () => shareDay(day, lang).catch((e) => showDialog(s.download, String(e?.message ?? e))) },
         {
           text: lang === 'ja' ? 'フォルダに保存' : 'Save to folder',
           onPress: () =>
             saveDayToFolder(day, lang)
-              .then((n) => Alert.alert(s.saved, n))
-              .catch((e) => Alert.alert(s.download, String(e?.message ?? e))),
+              .then((n) => showDialog(s.saved, n))
+              .catch((e) => showDialog(s.download, String(e?.message ?? e))),
         },
       ],
     );
@@ -66,6 +68,8 @@ export function DayView({ date, showBrand }: { date: string; showBrand?: boolean
         </View>
       ) : null}
 
+      {isToday ? <ExampleBanner /> : null}
+
       <View style={styles.head}>
         <View style={{ flex: 1 }}>
           <Text style={{ color: t.muted, fontSize: 12 }}>{longDate(date, lang)}</Text>
@@ -73,6 +77,7 @@ export function DayView({ date, showBrand }: { date: string; showBrand?: boolean
             value={name}
             onChangeText={setName}
             onEndEditing={() => renameDay(date, name)}
+            onBlur={() => name !== (day?.name ?? '') && renameDay(date, name)}
             placeholder={s.nameThisDay}
             placeholderTextColor={t.muted}
             style={{ fontSize: 26, fontWeight: '800', color: t.ink, paddingVertical: 2 }}

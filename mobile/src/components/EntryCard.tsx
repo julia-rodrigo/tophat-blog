@@ -1,7 +1,8 @@
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useState } from 'react';
-import { Alert, Image, Linking, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Linking, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { isValidTime, stamp } from '../lib/dates';
+import { showDialog } from '../lib/dialog';
 import { useT } from '../lib/i18n';
 import { useDiary } from '../lib/store';
 import { diffWords } from '../lib/text';
@@ -66,7 +67,7 @@ export function EntryCard({ date, entry }: { date: string; entry: Entry }) {
     setEditing(false);
   };
   const confirmDelete = () =>
-    Alert.alert(s.delete, lang === 'ja' ? 'この記録と音声を削除しますか？' : 'Delete this entry and its recording?', [
+    showDialog(s.delete, lang === 'ja' ? 'この記録と音声を削除しますか？' : 'Delete this entry and its recording?', [
       { text: s.cancel, style: 'cancel' },
       { text: s.delete, style: 'destructive', onPress: () => deleteEntry(date, entry.id) },
     ]);

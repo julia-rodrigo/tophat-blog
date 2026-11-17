@@ -6,6 +6,8 @@ import { syncReminder } from '../lib/reminders';
 import { useDiary } from '../lib/store';
 import { useBackupStatus } from '../lib/backupStatus';
 import { useTheme } from '../theme';
+import { DialogHost } from '../components/DialogHost';
+import { seedExamplesOnWeb } from '../lib/demo';
 
 /** Saves a phone backup a couple of seconds after anything changes. */
 function useAutoBackup() {
@@ -39,6 +41,7 @@ export default function RootLayout() {
   const t = useTheme();
   useAutoBackup();
   useReminderSync();
+  useEffect(() => seedExamplesOnWeb(), []);
   return (
     <>
       <StatusBar style="auto" />
@@ -53,6 +56,7 @@ export default function RootLayout() {
         <Stack.Screen name="drive" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
         <Stack.Screen name="plans" options={{ presentation: 'modal' }} />
       </Stack>
+      <DialogHost />
     </>
   );
 }

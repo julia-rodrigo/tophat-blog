@@ -150,7 +150,7 @@ export function useRecorder() {
     return { text, audioUris, durationSec };
   }, [seconds]);
 
-  return { state, transcript: [finalText, partial].filter(Boolean).join(' '), seconds, error, start, pause, resume, finish };
+  return { canTalk: true, state, transcript: [finalText, partial].filter(Boolean).join(' '), seconds, error, start, pause, resume, finish };
 }
 
 export function fmtSeconds(s: number): string {

@@ -23,10 +23,17 @@
       "bundleIdentifier": "app.logday5"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "output": "single",
+      "bundler": "metro"
     },
     "plugins": [
-      "expo-router",
+      [
+        "expo-router",
+        {
+          "asyncRoutes": false
+        }
+      ],
       [
         "expo-splash-screen",
         {

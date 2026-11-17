@@ -1,11 +1,12 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Logo } from '../../components/Logo';
 import { Button, Chip, H1, Muted, Section, Segmented } from '../../components/ui';
 import { backupNowToFolder, lastAutoBackup, restoreFromFile } from '../../lib/files';
 import { useBackupStatus } from '../../lib/backupStatus';
+import { showDialog } from '../../lib/dialog';
 import { useT } from '../../lib/i18n';
 import { useDiary } from '../../lib/store';
 import type { Lang, MoodMode } from '../../lib/types';
@@ -35,10 +36,10 @@ export default function YouScreen() {
   const run = async (fn: () => Promise<string>) => {
     setBusy(true);
     try {
-      Alert.alert(s.backup, await fn());
+      showDialog(s.backup, await fn());
     } catch (e) {
       const msg = String((e as Error)?.message ?? e);
-      if (!/cancel/i.test(msg)) Alert.alert(s.backup, msg);
+      if (!/cancel/i.test(msg)) showDialog(s.backup, msg);
     } finally {
       setBusy(false);
     }
@@ -126,7 +127,7 @@ export default function YouScreen() {
           kind="plain"
           disabled={busy}
           onPress={() =>
-            Alert.alert(
+            showDialog(
               ja ? '復元しますか？' : 'Restore?',
               ja ? '今の日記はバックアップの内容に置き換わります。' : 'Your current diary will be replaced by the backup.',
               [
