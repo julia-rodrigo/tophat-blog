@@ -58,6 +58,8 @@ export interface Settings {
   singleColor: string;
   keepAudio: boolean;
   reminder: { on: boolean; hour: number; minute: number };
+  /** Light by default; 'system' follows the phone. */
+  theme?: 'light' | 'dark' | 'system';
   /** true while the web preview shows example entries */
   exampleData?: boolean;
 }

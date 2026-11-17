@@ -4,7 +4,8 @@ import { AppState, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleS
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ExampleBanner } from '../../components/ExampleBanner';
 import { ExtrasTray, usePickMedia } from '../../components/Extras';
-import { ImageIcon, MicIcon, PlusIcon, SendIcon } from '../../components/icons';
+import { ImageIcon, MicIcon, MoonIcon, PlusIcon, SendIcon, SunIcon } from '../../components/icons';
+import { FadeIn, LiveBars, Pop, PulseRing } from '../../components/motion';
 import { Paper, MARGIN_X } from '../../components/Paper';
 import { fmtSeconds, useRecorder } from '../../components/useRecorder';
 import { dateKey, dayTitle } from '../../lib/dates';
@@ -37,15 +38,20 @@ export default function WriteScreen() {
   const pickMedia = usePickMedia();
   const [text, setText] = useState('');
   const [more, setMore] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ msg: string; n: number } | null>(null);
+  const [sheetKey, setSheetKey] = useState(0);
+  const dark = useDiary((s) => (s.settings.theme ?? 'light') === 'dark');
+  const setSettings = useDiary((s) => s.setSettings);
   const input = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   const recording = rec.state === 'recording' || rec.state === 'paused' || rec.state === 'finishing';
   const count = day?.entries.length ?? 0;
 
   const flash = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 1800);
+    const n = Date.now();
+    setToast({ msg, n });
+    setSheetKey((k) => k + 1); // a fresh page slides in
+    setTimeout(() => setToast((cur) => (cur?.n === n ? null : cur)), 1800);
   };
 
   const send = () => {
@@ -80,25 +86,37 @@ export default function WriteScreen() {
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 14, paddingBottom: 24, flexGrow: 1 }} keyboardShouldPersistTaps="handled">
         <View style={styles.head}>
           <Text style={[styles.date, { color: t.ink, fontFamily: HAND }]}>{dayTitle(today, ja ? 'ja' : 'en')}</Text>
-          {count ? (
-            <Pressable onPress={() => router.push(`/day/${today}`)} hitSlop={8} accessibilityRole="link">
-              <Text style={{ color: t.accent, fontSize: 13 }}>
-                {ja ? `今日のページ (${count}) →` : `Today's page (${count}) →`}
-              </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+            {count ? (
+              <Pressable onPress={() => router.push(`/day/${today}`)} hitSlop={8} accessibilityRole="link">
+                <Text style={{ color: t.accent, fontSize: 13 }}>{ja ? `今日 (${count}) →` : `Today (${count}) →`}</Text>
+              </Pressable>
+            ) : null}
+            <Pressable
+              onPress={() => setSettings({ theme: dark ? 'light' : 'dark' })}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {dark ? <SunIcon color={t.ink} size={22} /> : <MoonIcon color={t.ink} size={22} />}
             </Pressable>
-          ) : null}
+          </View>
         </View>
 
         <View style={{ paddingHorizontal: 12, marginBottom: 8 }}>
           <ExampleBanner />
         </View>
 
+        <FadeIn key={sheetKey} from={sheetKey ? 26 : 10}>
         <Paper style={[styles.sheet, { borderColor: t.line }]} lines={14}>
           {recording ? (
             <View style={styles.writeArea}>
-              <Text style={[styles.recLabel, { color: t.rec }]}>
-                {rec.state === 'paused' ? (ja ? '一時停止中' : 'Paused') : '● REC'} {fmtSeconds(rec.seconds)}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, height: RULE }}>
+                <Text style={[styles.recLabel, { color: t.rec }]}>
+                  {rec.state === 'paused' ? (ja ? '一時停止中' : 'Paused') : '● REC'} {fmtSeconds(rec.seconds)}
+                </Text>
+                <LiveBars active={rec.state === 'recording'} color={t.rec} />
+              </View>
               <Text style={[styles.writing, { color: t.ink }]}>{rec.transcript || (ja ? '聞いています…' : 'Listening…')}</Text>
             </View>
           ) : (
@@ -114,8 +132,13 @@ export default function WriteScreen() {
             />
           )}
         </Paper>
+        </FadeIn>
 
-        {toast ? <Text style={[styles.toast, { color: t.ok }]}>✓ {toast}</Text> : null}
+        {toast ? (
+          <Pop key={toast.n} style={{ alignSelf: 'center', marginTop: 12 }}>
+            <Text style={[styles.toastPill, { color: t.ok, backgroundColor: t.surface, borderColor: t.line }]}>✓ {toast.msg}</Text>
+          </Pop>
+        ) : null}
         {rec.error ? <Text style={[styles.toast, { color: t.rec }]}>{rec.error}</Text> : null}
 
         {more && !recording ? (
@@ -143,6 +166,8 @@ export default function WriteScreen() {
             <SendIcon color="#fff" size={30} />
           </Pressable>
         ) : (
+          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+          <PulseRing active={rec.state === 'recording'} size={80} color={t.rec} />
           <Pressable
             onPress={onMic}
             disabled={rec.state === 'finishing'}
@@ -152,6 +177,7 @@ export default function WriteScreen() {
           >
             {recording ? <View style={{ width: 24, height: 24, borderRadius: 5, backgroundColor: '#fff' }} /> : <MicIcon color="#fff" size={32} />}
           </Pressable>
+          </View>
         )}
         <View style={[styles.side, { alignItems: 'flex-end' }]}>
           {recording ? null : (
@@ -180,6 +206,7 @@ const styles = StyleSheet.create({
   writing: { fontSize: 18, lineHeight: RULE, textAlignVertical: 'top' },
   recLabel: { fontSize: 12, fontWeight: '700', lineHeight: RULE, fontVariant: ['tabular-nums'] },
   toast: { textAlign: 'center', marginTop: 10, fontSize: 14, fontWeight: '600' },
+  toastPill: { fontSize: 14, fontWeight: '600', borderWidth: 1, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8, overflow: 'hidden' },
   bar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, paddingVertical: 10, borderTopWidth: StyleSheet.hairlineWidth },
   side: { flex: 1, alignItems: 'flex-start' },
   round: { width: 46, height: 46, borderRadius: 23, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },

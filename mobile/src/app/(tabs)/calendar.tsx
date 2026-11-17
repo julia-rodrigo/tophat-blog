@@ -6,6 +6,7 @@ import { Muted } from '../../components/ui';
 import { dateKey, monthTitle, shortDate, streak } from '../../lib/dates';
 import { useT } from '../../lib/i18n';
 import { useDiary } from '../../lib/store';
+import { FadeIn } from '../../components/motion';
 import { HAND, useTheme } from '../../theme';
 
 const DOW = { en: ['M', 'T', 'W', 'T', 'F', 'S', 'S'], ja: ['月', '火', '水', '木', '金', '土', '日'] };
@@ -41,7 +42,7 @@ export default function CalendarScreen() {
 
   const shift = (n: number) => setYm(({ y, m }) => ({ y: m + n < 0 ? y - 1 : m + n > 11 ? y + 1 : y, m: (m + n + 12) % 12 }));
   const tint = (k: string) => {
-    if (moodMode === 'off') return t.sunk;
+    if (moodMode === 'off') return t.accentSoft;
     if (moodMode === 'single') return single;
     const first = [...(days[k]?.entries ?? [])].sort((a, b) => a.time.localeCompare(b.time))[0];
     return t.mood[first?.mood ?? 'calm'];
@@ -64,6 +65,7 @@ export default function CalendarScreen() {
         {run ? `🔥 ${run} ${s.streak}` : lang === 'ja' ? '今日書いて連続記録をスタート' : 'Write today to start a streak'}
       </Text>
 
+      <FadeIn key={`${ym.y}-${ym.m}`}>
       <View style={styles.grid}>
         {DOW[lang].map((d, i) => (
           <Text key={`d${i}`} style={[styles.cell, styles.dow, { color: t.muted }]}>
@@ -89,6 +91,8 @@ export default function CalendarScreen() {
           ),
         )}
       </View>
+
+      </FadeIn>
 
       <View style={{ gap: 8 }}>
         {list.length === 0 ? <Muted style={{ textAlign: 'center' }}>{lang === 'ja' ? 'この月はまだページがありません。' : 'No pages this month yet.'}</Muted> : null}

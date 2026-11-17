@@ -66,6 +66,18 @@ export default function SettingsScreen() {
         <Muted>{ja ? '音声認識とアプリの表示に使います。' : 'Used for speech-to-text and the app text.'}</Muted>
       </Section>
 
+      <Section title={ja ? '表示' : 'Appearance'}>
+        <Segmented<'light' | 'dark' | 'system'>
+          value={settings.theme ?? 'light'}
+          options={[
+            ['light', ja ? 'ライト' : 'Light'],
+            ['dark', ja ? 'ダーク' : 'Dark'],
+            ['system', ja ? '端末に合わせる' : 'Match phone'],
+          ]}
+          onChange={(theme) => setSettings({ theme })}
+        />
+      </Section>
+
       <Section title={s.moodColours}>
         <Segmented<MoodMode>
           value={settings.moodMode}
@@ -88,7 +100,7 @@ export default function SettingsScreen() {
             ))}
           </View>
         ) : null}
-        <Muted>{ja ? '各記録に淡い気分の色をつけます。' : 'A pale colour on each entry, guessed from what you said.'}</Muted>
+        <Muted>{ja ? '任意：各記録に淡い気分の色をつけます。' : 'Optional: a pale colour on each note, guessed from what you said. Off by default.'}</Muted>
       </Section>
 
       <Section title={s.reminder}>

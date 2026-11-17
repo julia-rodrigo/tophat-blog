@@ -1,4 +1,5 @@
 import { Platform, useColorScheme } from 'react-native';
+import { useDiary } from './lib/store';
 import type { Mood } from './lib/types';
 
 /* Notepad: ruled paper, a red margin line, pen-blue ink, sticky-note colours for pages. */
@@ -42,8 +43,14 @@ const dark: typeof light = {
 
 export type Theme = typeof light;
 
+export function useIsDark(): boolean {
+  const pref = useDiary((s) => s.settings.theme ?? 'light');
+  const system = useColorScheme();
+  return pref === 'dark' || (pref === 'system' && system === 'dark');
+}
+
 export function useTheme(): Theme {
-  return useColorScheme() === 'dark' ? dark : light;
+  return useIsDark() ? dark : light;
 }
 
 /** Handwritten face for titles and dates. Loaded with expo-font on Android, from Google Fonts on the web. */

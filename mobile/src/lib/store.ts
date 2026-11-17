@@ -7,7 +7,8 @@ import type { DiaryData, Day, Entry, Settings, Todo } from './types';
 
 export const DEFAULT_SETTINGS: Settings = {
   lang: 'en',
-  moodMode: 'auto',
+  moodMode: 'off',
+  theme: 'light',
   singleColor: '#ddeefb',
   keepAudio: true,
   reminder: { on: true, hour: 21, minute: 0 },
@@ -134,7 +135,13 @@ export const useDiary = create<DiaryState>()(
     }),
     {
       name: 'logday5-diary',
-      version: 1,
+      version: 2,
+      // v2: light mode by default, mood colours off unless switched on.
+      migrate: (old, from) => {
+        const st = old as DiaryData;
+        if (from < 2 && st?.settings) st.settings = { ...st.settings, moodMode: 'off', theme: 'light' };
+        return st as never;
+      },
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (s) => ({ days: s.days, todos: s.todos, settings: s.settings }),
     },

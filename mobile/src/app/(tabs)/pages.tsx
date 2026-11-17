@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { shortDate } from '../../lib/dates';
 import { useDiary } from '../../lib/store';
 import type { Day } from '../../lib/types';
+import { FadeIn } from '../../components/motion';
 import { HAND, useTheme } from '../../theme';
 
 const TILTS = ['-1.2deg', '0.8deg', '-0.5deg', '1.1deg', '0deg', '-0.9deg'];
@@ -39,14 +40,16 @@ export default function PagesScreen() {
     const sorted = [...d.entries].sort((a, b) => a.time.localeCompare(b.time));
     const photo = sorted.find((e) => e.kind === 'photo' && e.mediaUri)?.mediaUri;
     const preview = sorted.filter((e) => e.text && e.kind !== 'sound').map((e) => e.text).join(' · ');
+    const tape = [t.mood.happy, t.mood.calm, t.mood.proud, t.mood.tired, t.recSoft][i % 5];
     return (
+      <FadeIn key={d.date} delay={Math.min(i, 10) * 60}>
       <Pressable
-        key={d.date}
         onPress={() => router.push(`/day/${d.date}`)}
         style={({ pressed }) => [styles.card, { backgroundColor: colour(d), transform: [{ rotate: TILTS[i % TILTS.length] }, { scale: pressed ? 0.97 : 1 }] }]}
         accessibilityRole="button"
         accessibilityLabel={`${d.name || 'Untitled'}, ${shortDate(d.date, lang)}`}
       >
+        <View style={[styles.tape, { backgroundColor: tape }]} />
         <Text style={{ color: t.muted, fontSize: 11 }}>{shortDate(d.date, lang)}</Text>
         <Text style={{ color: t.ink, fontFamily: HAND, fontSize: 24, lineHeight: 26 }} numberOfLines={2}>
           {d.name || (ja ? '無題' : 'Untitled')}
@@ -59,6 +62,7 @@ export default function PagesScreen() {
           {d.entries.length} {ja ? '件' : d.entries.length === 1 ? 'note' : 'notes'}
         </Text>
       </Pressable>
+      </FadeIn>
     );
   };
 
@@ -97,6 +101,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 4,
     padding: 12,
+    paddingTop: 16,
     gap: 6,
     minHeight: 150,
     shadowColor: '#000',
@@ -105,5 +110,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     elevation: 2,
   },
+  tape: { position: 'absolute', top: -7, alignSelf: 'center', left: '35%', width: '30%', height: 14, borderRadius: 2, opacity: 0.9 },
   thumb: { width: '100%', aspectRatio: 4 / 3, borderRadius: 3 },
 });

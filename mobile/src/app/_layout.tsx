@@ -7,7 +7,7 @@ import { writeAutoBackup } from '../lib/files';
 import { syncReminder } from '../lib/reminders';
 import { useDiary } from '../lib/store';
 import { useBackupStatus } from '../lib/backupStatus';
-import { useTheme } from '../theme';
+import { useIsDark, useTheme } from '../theme';
 import { DialogHost } from '../components/DialogHost';
 import { seedExamplesOnWeb } from '../lib/demo';
 
@@ -41,6 +41,14 @@ function useReminderSync() {
 
 export default function RootLayout() {
   const t = useTheme();
+  const isDark = useIsDark();
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      document.documentElement.style.background = t.bg;
+      document.body.style.background = t.bg;
+      document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+    }
+  }, [t.bg, isDark]);
   // Android loads the handwriting font from the app; the web page loads it from Google Fonts.
   const [fontsReady] = useFonts(Platform.OS === 'web' ? {} : { Caveat_700Bold });
   useAutoBackup();
@@ -49,7 +57,7 @@ export default function RootLayout() {
   if (!fontsReady) return null;
   return (
     <>
-      <StatusBar style="auto" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
           headerShown: false,

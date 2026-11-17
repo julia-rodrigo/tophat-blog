@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GearIcon } from '../../components/icons';
 import { computeStats } from '../../lib/stats';
 import { useDiary } from '../../lib/store';
+import { FadeIn, GrowBar } from '../../components/motion';
 import { HAND, useTheme } from '../../theme';
 
 const TOD = {
@@ -22,6 +23,7 @@ export default function StatsScreen() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const days = useDiary((s) => s.days);
+  const moodOn = useDiary((s) => s.settings.moodMode !== 'off');
   const lang = useDiary((s) => s.settings.lang);
   const ja = lang === 'ja';
   const st = useMemo(() => computeStats(days), [days]);
@@ -46,19 +48,23 @@ export default function StatsScreen() {
         </Pressable>
       </View>
 
+      <FadeIn>
       <View style={styles.tiles}>
         <Big n={st.streak} label={ja ? '日連続 🔥' : 'day streak 🔥'} colour={t.mood.happy} />
         <Big n={st.pages} label={ja ? 'ページ' : 'pages'} colour={t.mood.calm} />
         <Big n={st.notes} label={ja ? 'メモ' : 'notes'} colour={t.mood.proud} />
         <Big n={st.words} label={ja ? '語' : 'words'} colour={t.mood.tired} />
       </View>
+      </FadeIn>
 
       <View style={[styles.card, { backgroundColor: t.paper, borderColor: t.line }]}>
         <Text style={[styles.h, { color: t.ink }]}>{ja ? '最近14日' : 'Last 14 days'}</Text>
         <View style={styles.bars}>
           {st.last14.map((d, i) => (
             <View key={d.date} style={styles.barCol}>
-              <View style={[styles.bar, { height: 4 + (d.count / maxBar) * 70, backgroundColor: d.count ? (i === 13 ? t.rec : t.accent) : t.line }]} />
+              <View style={{ height: 74, width: '100%', justifyContent: 'flex-end' }}>
+                <GrowBar vertical size={d.count ? 0.06 + (d.count / maxBar) * 0.94 : 0.05} delay={i * 35} color={d.count ? (i === 13 ? t.rec : t.accent) : t.line} style={styles.bar} />
+              </View>
               <Text style={{ fontSize: 9, color: t.muted }}>{Number(d.date.slice(8))}</Text>
             </View>
           ))}
@@ -75,7 +81,7 @@ export default function StatsScreen() {
             <View key={d.label} style={styles.hRow}>
               <Text style={{ width: 82, color: t.ink, fontSize: 13 }}>{TOD[lang][d.label]}</Text>
               <View style={[styles.hTrack, { backgroundColor: t.sunk }]}>
-                <View style={{ width: `${(d.count / maxTod) * 100}%`, height: '100%', backgroundColor: d.label === topTod.label ? t.rec : t.accent, borderRadius: 4 }} />
+                <GrowBar size={d.count / maxTod} color={d.label === topTod.label ? t.rec : t.accent} style={{ height: '100%', borderRadius: 4 }} />
               </View>
               <Text style={{ width: 26, textAlign: 'right', color: t.muted, fontSize: 12, fontVariant: ['tabular-nums'] }}>{d.count}</Text>
             </View>
@@ -88,7 +94,7 @@ export default function StatsScreen() {
         </View>
       ) : null}
 
-      {moodTotal ? (
+      {moodOn && moodTotal ? (
         <View style={[styles.card, { backgroundColor: t.paper, borderColor: t.line }]}>
           <Text style={[styles.h, { color: t.ink }]}>{ja ? '気分' : 'Your moods'}</Text>
           <View style={styles.moodBar}>

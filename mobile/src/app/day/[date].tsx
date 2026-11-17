@@ -9,6 +9,7 @@ import { longDate } from '../../lib/dates';
 import { showDialog } from '../../lib/dialog';
 import { saveDayToFolder, shareDay } from '../../lib/files';
 import { useDiary } from '../../lib/store';
+import { FadeIn } from '../../components/motion';
 import { HAND, RULE, useTheme } from '../../theme';
 
 /** One day's page in the diary, written out like a notepad page. */
@@ -70,7 +71,11 @@ export default function DayPage() {
           </View>
           <View style={{ gap: 0, paddingBottom: RULE }}>
             {entries.length ? (
-              entries.map((e) => <EntryCard key={e.id} date={date} entry={e} />)
+              entries.map((e, i) => (
+                <FadeIn key={e.id} delay={Math.min(i, 12) * 50} from={8}>
+                  <EntryCard date={date} entry={e} />
+                </FadeIn>
+              ))
             ) : (
               <Text style={{ paddingLeft: MARGIN_X, color: t.muted, fontSize: 16, lineHeight: RULE }}>
                 {ja ? 'まだ何もありません。' : 'Nothing on this page yet.'}
