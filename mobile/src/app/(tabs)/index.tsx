@@ -107,7 +107,7 @@ export default function WriteScreen() {
               value={text}
               onChangeText={setText}
               multiline
-              placeholder={ja ? '何でも書いてね…' : 'Write anything…'}
+              placeholder={ja ? '書くか、下のマイクで話してね…' : 'Write anything, or tap the mic and talk…'}
               placeholderTextColor={t.muted}
               style={[styles.writeArea, styles.writing, { color: t.ink }]}
               accessibilityLabel="Write a note"
@@ -125,17 +125,36 @@ export default function WriteScreen() {
         ) : null}
       </ScrollView>
 
-      {/* Tool bar: picture · more · (talk or send) */}
+      {/* Tool bar: picture · big talk/send button in the middle · more */}
       <View style={[styles.bar, { borderTopColor: t.line, backgroundColor: t.bg }]}>
-        {recording ? (
-          <Pressable onPress={rec.state === 'paused' ? rec.resume : rec.pause} style={[styles.pill, { borderColor: t.line, backgroundColor: t.surface }]} accessibilityRole="button">
-            <Text style={{ color: t.ink, fontWeight: '600' }}>{rec.state === 'paused' ? (ja ? '再開' : 'Resume') : ja ? '一時停止' : 'Pause'}</Text>
-          </Pressable>
-        ) : (
-          <>
+        <View style={styles.side}>
+          {recording ? (
+            <Pressable onPress={rec.state === 'paused' ? rec.resume : rec.pause} style={[styles.pill, { borderColor: t.line, backgroundColor: t.surface }]} accessibilityRole="button">
+              <Text style={{ color: t.ink, fontWeight: '600' }}>{rec.state === 'paused' ? (ja ? '再開' : 'Resume') : ja ? '一時停止' : 'Pause'}</Text>
+            </Pressable>
+          ) : (
             <Pressable onPress={onImage} style={[styles.round, { backgroundColor: t.surface, borderColor: t.line }]} accessibilityLabel="Add a picture" accessibilityRole="button">
               <ImageIcon color={t.ink} size={22} />
             </Pressable>
+          )}
+        </View>
+        {text.trim() && !recording ? (
+          <Pressable onPress={send} style={[styles.big, { backgroundColor: t.accent }]} accessibilityLabel="Save note" accessibilityRole="button">
+            <SendIcon color="#fff" size={30} />
+          </Pressable>
+        ) : (
+          <Pressable
+            onPress={onMic}
+            disabled={rec.state === 'finishing'}
+            style={[styles.big, { backgroundColor: t.rec, borderColor: t.recSoft, borderWidth: rec.state === 'recording' ? 10 : 6 }]}
+            accessibilityLabel={recording ? 'Stop and save' : 'Record a voice note'}
+            accessibilityRole="button"
+          >
+            {recording ? <View style={{ width: 24, height: 24, borderRadius: 5, backgroundColor: '#fff' }} /> : <MicIcon color="#fff" size={32} />}
+          </Pressable>
+        )}
+        <View style={[styles.side, { alignItems: 'flex-end' }]}>
+          {recording ? null : (
             <Pressable
               onPress={() => setMore((v) => !v)}
               style={[styles.round, { backgroundColor: more ? t.accentSoft : t.surface, borderColor: more ? t.accent : t.line }]}
@@ -146,24 +165,8 @@ export default function WriteScreen() {
                 <PlusIcon color={more ? t.accent : t.ink} size={22} />
               </View>
             </Pressable>
-          </>
-        )}
-        <View style={{ flex: 1 }} />
-        {text.trim() && !recording ? (
-          <Pressable onPress={send} style={[styles.big, { backgroundColor: t.accent }]} accessibilityLabel="Save note" accessibilityRole="button">
-            <SendIcon color="#fff" size={26} />
-          </Pressable>
-        ) : (
-          <Pressable
-            onPress={onMic}
-            disabled={rec.state === 'finishing'}
-            style={[styles.big, { backgroundColor: t.rec, borderColor: t.recSoft, borderWidth: rec.state === 'recording' ? 8 : 0 }]}
-            accessibilityLabel={recording ? 'Stop and save' : 'Record a voice note'}
-            accessibilityRole="button"
-          >
-            {recording ? <View style={{ width: 20, height: 20, borderRadius: 4, backgroundColor: '#fff' }} /> : <MicIcon color="#fff" size={28} />}
-          </Pressable>
-        )}
+          )}
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -177,8 +180,9 @@ const styles = StyleSheet.create({
   writing: { fontSize: 18, lineHeight: RULE, textAlignVertical: 'top' },
   recLabel: { fontSize: 12, fontWeight: '700', lineHeight: RULE, fontVariant: ['tabular-nums'] },
   toast: { textAlign: 'center', marginTop: 10, fontSize: 14, fontWeight: '600' },
-  bar: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 10, borderTopWidth: StyleSheet.hairlineWidth },
+  bar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, paddingVertical: 10, borderTopWidth: StyleSheet.hairlineWidth },
+  side: { flex: 1, alignItems: 'flex-start' },
   round: { width: 46, height: 46, borderRadius: 23, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   pill: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 18, paddingVertical: 11 },
-  big: { width: 62, height: 62, borderRadius: 31, alignItems: 'center', justifyContent: 'center' },
+  big: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center' },
 });
