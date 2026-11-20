@@ -101,3 +101,20 @@ export const MoonIcon = (p: P) => (
     <Path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />
   </S>
 );
+export const ScanIcon = (p: P) => (
+  <S {...p}>
+    <Path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M8 10h8M8 14h5" />
+  </S>
+);
+export const TextMicIcon = (p: P) => (
+  <S {...p}>
+    <Rect x={4} y={3} width={5} height={9} rx={2.5} />
+    <Path d="M2 10a4.5 4.5 0 0 0 9 0M6.5 15v2M13 7h8M13 11h8M13 15h6M4 20h17" />
+  </S>
+);
+export const FileAudioIcon = (p: P) => (
+  <S {...p}>
+    <Path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6z" />
+    <Path d="M14 3v6h6M9 13v4M12 11v8M15 14v2" />
+  </S>
+);

@@ -4,7 +4,11 @@ import { AppState, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleS
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ExampleBanner } from '../../components/ExampleBanner';
 import { ExtrasTray, usePickMedia } from '../../components/Extras';
-import { ImageIcon, MicIcon, MoonIcon, PlusIcon, SendIcon, SunIcon } from '../../components/icons';
+import { EntryCard } from '../../components/EntryCard';
+import { FileAudioIcon, ImageIcon, MicIcon, MoonIcon, PlusIcon, ScanIcon, SendIcon, SunIcon, TextMicIcon } from '../../components/icons';
+import { ScreenshotImport } from '../../components/ScreenshotImport';
+import { showDialog } from '../../lib/dialog';
+import { pickAndTranscribeAudio } from '../../lib/transcribeFile';
 import { FadeIn, LiveBars, Pop, PulseRing } from '../../components/motion';
 import { Paper, MARGIN_X } from '../../components/Paper';
 import { fmtSeconds, useRecorder } from '../../components/useRecorder';
@@ -39,7 +43,10 @@ export default function WriteScreen() {
   const [text, setText] = useState('');
   const [more, setMore] = useState(false);
   const [toast, setToast] = useState<{ msg: string; n: number } | null>(null);
-  const [sheetKey, setSheetKey] = useState(0);
+  const [draftMode, setDraftMode] = useState(false);
+  const [shotOpen, setShotOpen] = useState(false);
+  const [busyFile, setBusyFile] = useState(false);
+  const scroller = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const dark = useDiary((s) => (s.settings.theme ?? 'light') === 'dark');
   const setSettings = useDiary((s) => s.setSettings);
   const input = useRef<React.ComponentRef<typeof TextInput>>(null);
@@ -50,7 +57,6 @@ export default function WriteScreen() {
   const flash = (msg: string) => {
     const n = Date.now();
     setToast({ msg, n });
-    setSheetKey((k) => k + 1); // a fresh page slides in
     setTimeout(() => setToast((cur) => (cur?.n === n ? null : cur)), 1800);
   };
 
@@ -72,9 +78,52 @@ export default function WriteScreen() {
       return;
     }
     const out = await rec.finish();
+    if (draftMode) {
+      // "Talk into the text box": show the words so they can be checked before saving.
+      setDraftMode(false);
+      setText((prev) => [prev.trim(), out.text].filter(Boolean).join(' '));
+      flash(ja ? '確認して送信してね' : 'Check it, then tap send');
+      setTimeout(() => input.current?.focus(), 50);
+      return;
+    }
     const entry = addSpoken({ ...out, source: 'voice' });
     if (entry) flash(entry.kind === 'todo' ? (ja ? 'やることに追加しました' : 'Added to your to-do') : ja ? '保存しました' : 'Saved to today');
   };
+
+  const startDraft = async () => {
+    setMore(false);
+    if (!rec.canTalk) {
+      flash(ja ? 'ここでは音声が使えません。' : "Voice isn't available here.");
+      return;
+    }
+    setDraftMode(true);
+    await rec.start();
+  };
+
+  const transcribeFile = async () => {
+    setMore(false);
+    setBusyFile(true);
+    try {
+      const words = await pickAndTranscribeAudio(ja ? 'ja' : 'en');
+      if (words === null) return;
+      if (!words) {
+        flash(ja ? '言葉が聞き取れませんでした' : 'No words heard in that file');
+        return;
+      }
+      setText((prev) => [prev.trim(), words].filter(Boolean).join(' '));
+      flash(ja ? '確認して送信してね' : 'Check it, then tap send');
+    } catch (e) {
+      showDialog(ja ? '音声ファイル' : 'Audio file', String((e as Error)?.message ?? e));
+    } finally {
+      setBusyFile(false);
+    }
+  };
+
+  useEffect(() => {
+    // Keep the newest line in view, like writing down a page.
+    const id = setTimeout(() => scroller.current?.scrollToEnd({ animated: true }), 80);
+    return () => clearTimeout(id);
+  }, [count]);
 
   const onImage = async () => {
     const n = await pickMedia();
@@ -83,15 +132,10 @@ export default function WriteScreen() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: t.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 14, paddingBottom: 24, flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+      <ScrollView ref={scroller} contentContainerStyle={{ paddingTop: insets.top + 14, paddingBottom: 24, flexGrow: 1 }} keyboardShouldPersistTaps="handled">
         <View style={styles.head}>
           <Text style={[styles.date, { color: t.ink, fontFamily: HAND }]}>{dayTitle(today, ja ? 'ja' : 'en')}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-            {count ? (
-              <Pressable onPress={() => router.push(`/day/${today}`)} hitSlop={8} accessibilityRole="link">
-                <Text style={{ color: t.accent, fontSize: 13 }}>{ja ? `今日 (${count}) →` : `Today (${count}) →`}</Text>
-              </Pressable>
-            ) : null}
             <Pressable
               onPress={() => setSettings({ theme: dark ? 'light' : 'dark' })}
               hitSlop={10}
@@ -107,13 +151,24 @@ export default function WriteScreen() {
           <ExampleBanner />
         </View>
 
-        <FadeIn key={sheetKey} from={sheetKey ? 26 : 10}>
-        <Paper style={[styles.sheet, { borderColor: t.line }]} lines={14}>
+        <FadeIn from={10}>
+        <Paper style={[styles.sheet, { borderColor: t.line }]} lines={Math.max(14, count * 3 + 10)}>
+          {count ? (
+            <View style={{ paddingTop: 8 }}>
+              {[...(day?.entries ?? [])]
+                .sort((a, b) => a.time.localeCompare(b.time))
+                .map((e) => (
+                  <FadeIn key={e.id} from={8}>
+                    <EntryCard date={today} entry={e} />
+                  </FadeIn>
+                ))}
+            </View>
+          ) : null}
           {recording ? (
             <View style={styles.writeArea}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, height: RULE }}>
                 <Text style={[styles.recLabel, { color: t.rec }]}>
-                  {rec.state === 'paused' ? (ja ? '一時停止中' : 'Paused') : '● REC'} {fmtSeconds(rec.seconds)}
+                  {rec.state === 'paused' ? (ja ? '一時停止中' : 'Paused') : draftMode ? (ja ? '● 文字にしています' : '● Into text box') : '● REC'} {fmtSeconds(rec.seconds)}
                 </Text>
                 <LiveBars active={rec.state === 'recording'} color={t.rec} />
               </View>
@@ -125,9 +180,9 @@ export default function WriteScreen() {
               value={text}
               onChangeText={setText}
               multiline
-              placeholder={ja ? '書くか、下のマイクで話してね…' : 'Write anything, or tap the mic and talk…'}
+              placeholder={count ? (ja ? '続きを書く…' : 'Keep writing…') : ja ? '書くか、下のマイクで話してね…' : 'Write anything, or tap the mic and talk…'}
               placeholderTextColor={t.muted}
-              style={[styles.writeArea, styles.writing, { color: t.ink }]}
+              style={[styles.writeArea, styles.writing, { color: t.ink, minHeight: count ? RULE * 4 : RULE * 12, paddingTop: count ? 0 : 10 }]}
               accessibilityLabel="Write a note"
             />
           )}
@@ -141,13 +196,21 @@ export default function WriteScreen() {
         ) : null}
         {rec.error ? <Text style={[styles.toast, { color: t.rec }]}>{rec.error}</Text> : null}
 
-        {more && !recording ? (
-          <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
-            <ExtrasTray onDone={() => setMore(false)} />
-          </View>
-        ) : null}
       </ScrollView>
+      <ScreenshotImport open={shotOpen} onClose={() => setShotOpen(false)} onAdded={flash} />
 
+      {more && !recording ? (
+        <FadeIn from={10} style={[styles.trayWrap, { backgroundColor: t.bg, borderTopColor: t.line }]}>
+          <ExtrasTray
+            onDone={() => setMore(false)}
+            actions={[
+              { label: ja ? '話して文字にする' : 'Talk into the text box', icon: <TextMicIcon color={t.accent} size={20} />, onPress: startDraft },
+              { label: ja ? 'スクショから文字' : 'Text from a screenshot', icon: <ScanIcon color={t.accent} size={20} />, onPress: () => { setMore(false); setShotOpen(true); } },
+              { label: busyFile ? '…' : ja ? '音声ファイルを文字に' : 'Transcribe an audio file', icon: <FileAudioIcon color={t.accent} size={20} />, onPress: transcribeFile },
+            ]}
+          />
+        </FadeIn>
+      ) : null}
       {/* Tool bar: picture · big talk/send button in the middle · more */}
       <View style={[styles.bar, { borderTopColor: t.line, backgroundColor: t.bg }]}>
         <View style={styles.side}>
@@ -209,6 +272,7 @@ const styles = StyleSheet.create({
   toastPill: { fontSize: 14, fontWeight: '600', borderWidth: 1, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8, overflow: 'hidden' },
   bar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, paddingVertical: 10, borderTopWidth: StyleSheet.hairlineWidth },
   side: { flex: 1, alignItems: 'flex-start' },
+  trayWrap: { paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth },
   round: { width: 46, height: 46, borderRadius: 23, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   pill: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 18, paddingVertical: 11 },
   big: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center' },

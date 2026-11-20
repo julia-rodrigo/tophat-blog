@@ -2,6 +2,11 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Muted } from '../../components/ui';
+import { MicIcon, ScanIcon } from '../../components/icons';
+import { LiveBars, PulseRing } from '../../components/motion';
+import { ScreenshotImport } from '../../components/ScreenshotImport';
+import { fmtSeconds, useRecorder } from '../../components/useRecorder';
+import { parseSpoken } from '../../lib/text';
 import { MARGIN_X, Paper } from '../../components/Paper';
 import { stamp } from '../../lib/dates';
 import { useT } from '../../lib/i18n';
@@ -16,6 +21,31 @@ export default function TodoScreen() {
   const lang = useDiary((st) => st.settings.lang);
   const { addTodo, toggleTodo, deleteTodo } = useDiary.getState();
   const [text, setText] = useState('');
+  const [shotOpen, setShotOpen] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const rec = useRecorder();
+  const recording = rec.state === 'recording' || rec.state === 'paused' || rec.state === 'finishing';
+  const ja = lang === 'ja';
+
+  const tell = (msg: string) => {
+    setNote(msg);
+    setTimeout(() => setNote((n) => (n === msg ? null : n)), 2000);
+  };
+
+  // Say it and it's on the list. No need to say "add to my to-do" here.
+  const onMic = async () => {
+    if (rec.state === 'idle') {
+      if (!rec.canTalk) return tell(ja ? 'ここでは音声が使えません。入力してください。' : "Voice isn't available here. Type instead.");
+      await rec.start();
+      return;
+    }
+    const out = await rec.finish();
+    const said = out.text.trim();
+    if (!said) return;
+    const parsed = parseSpoken(said);
+    addTodo(parsed.text, 'voice');
+    tell(ja ? '追加しました' : 'Added');
+  };
 
   const add = () => {
     if (!text.trim()) return;
@@ -29,8 +59,24 @@ export default function TodoScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: t.bg, paddingTop: insets.top + 4 }}>
       <ScrollView contentContainerStyle={{ padding: 14, paddingTop: 14, gap: 10 }} keyboardShouldPersistTaps="handled">
-        <Text style={{ fontFamily: HAND, fontSize: 36, color: t.ink }}>{s.todo}</Text>
-        <Muted>{s.todoHint}</Muted>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text style={{ fontFamily: HAND, fontSize: 36, color: t.ink }}>{s.todo}</Text>
+          <Pressable onPress={() => setShotOpen(true)} style={[styles.shot, { borderColor: t.line, backgroundColor: t.surface }]} accessibilityRole="button">
+            <ScanIcon color={t.accent} size={18} />
+            <Text style={{ color: t.ink, fontSize: 13 }}>{ja ? 'スクショから' : 'From screenshot'}</Text>
+          </Pressable>
+        </View>
+        <Muted>{ja ? 'マイクで話すか、入力して追加。' : 'Tap the mic and say it, or type it below.'}</Muted>
+        {recording ? (
+          <View style={[styles.live, { backgroundColor: t.recSoft }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Text style={{ color: t.rec, fontWeight: '700', fontSize: 12, fontVariant: ['tabular-nums'] }}>● {fmtSeconds(rec.seconds)}</Text>
+              <LiveBars active={rec.state === 'recording'} color={t.rec} count={14} />
+            </View>
+            <Text style={{ color: t.ink, fontSize: 17 }}>{rec.transcript || (ja ? '聞いています…' : 'Listening…')}</Text>
+          </View>
+        ) : null}
+        {note ? <Text style={{ color: t.ok, fontWeight: '600', textAlign: 'center' }}>✓ {note}</Text> : null}
         <Paper lines={Math.max(12, todos.length * 2 + 4)} style={[styles.sheet, { borderColor: t.line }]}>
         {[...open, ...done].map((x) => (
           <View key={x.id} style={styles.item}>
@@ -64,6 +110,18 @@ export default function TodoScreen() {
         </Paper>
       </ScrollView>
       <View style={[styles.add, { borderTopColor: t.line, backgroundColor: t.surface }]}>
+        <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+          <PulseRing active={rec.state === 'recording'} size={44} color={t.rec} />
+          <Pressable
+            onPress={onMic}
+            disabled={rec.state === 'finishing'}
+            style={[styles.send, { backgroundColor: t.rec }]}
+            accessibilityLabel={recording ? 'Stop and add' : 'Say a to-do'}
+            accessibilityRole="button"
+          >
+            {recording ? <View style={{ width: 14, height: 14, borderRadius: 3, backgroundColor: '#fff' }} /> : <MicIcon color="#fff" size={20} />}
+          </Pressable>
+        </View>
         <TextInput
           value={text}
           onChangeText={setText}
@@ -77,12 +135,15 @@ export default function TodoScreen() {
           <Text style={{ color: t.surface, fontSize: 20, fontWeight: '700' }}>+</Text>
         </Pressable>
       </View>
+      <ScreenshotImport open={shotOpen} onClose={() => setShotOpen(false)} prefer="todo" onAdded={tell} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   sheet: { borderRadius: 6, borderWidth: 1, paddingVertical: 8 },
+  shot: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
+  live: { borderRadius: 12, padding: 12, gap: 4 },
   item: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingLeft: MARGIN_X - 30, paddingRight: 14 },
   box: { width: 20, height: 20, borderRadius: 5, borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginTop: 5 },
   add: { flexDirection: 'row', gap: 8, padding: 12, borderTopWidth: 1 },

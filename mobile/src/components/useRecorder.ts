@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { speechLocale } from '../lib/i18n';
 import { keepFile } from '../lib/files';
 import { useDiary } from '../lib/store';
+import { fileJob } from '../lib/transcribeFile';
 
 export type RecState = 'idle' | 'recording' | 'paused' | 'finishing';
 
@@ -46,6 +47,7 @@ export function useRecorder() {
   }, [lang, keepAudio]);
 
   useSpeechRecognitionEvent('result', (e) => {
+    if (fileJob.running || want.current === 'idle') return;
     const text = e.results[0]?.transcript ?? '';
     if (e.isFinal) {
       finalRef.current = [finalRef.current, text.trim()].filter(Boolean).join(' ');
@@ -59,10 +61,12 @@ export function useRecorder() {
   });
 
   useSpeechRecognitionEvent('audioend', (e) => {
+    if (fileJob.running || want.current === 'idle') return;
     if (e.uri) audio.current.push(e.uri);
   });
 
   useSpeechRecognitionEvent('error', (e) => {
+    if (fileJob.running || want.current === 'idle') return;
     if (QUIET_ERRORS.has(e.error)) return;
     if (e.error === 'aborted') return;
     setError(e.message || e.error);
@@ -73,6 +77,7 @@ export function useRecorder() {
   });
 
   useSpeechRecognitionEvent('end', () => {
+    if (fileJob.running) return;
     // Android stops after long silences; start again so the user never has to hold anything.
     if (want.current === 'recording') {
       if (partialRef.current) {

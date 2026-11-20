@@ -29,7 +29,9 @@ export function usePickMedia() {
 }
 
 /** The "+" tray: the extra things. Song from Spotify, sound around me. */
-export function ExtrasTray({ onDone }: { onDone: () => void }) {
+export type TrayAction = { label: string; icon: React.ReactNode; onPress: () => void };
+
+export function ExtrasTray({ onDone, actions = [] }: { onDone: () => void; actions?: TrayAction[] }) {
   const t = useTheme();
   const ja = useDiary((st) => st.settings.lang === 'ja');
   const addEntry = useDiary((st) => st.addEntry);
@@ -74,6 +76,12 @@ export function ExtrasTray({ onDone }: { onDone: () => void }) {
 
   return (
     <View style={styles.tray}>
+      {actions.map((a) => (
+        <Pressable key={a.label} onPress={a.onPress} style={[styles.item, { backgroundColor: t.surface, borderColor: t.line }]} accessibilityRole="button">
+          {a.icon}
+          <Text style={{ color: t.ink, fontSize: 14 }}>{a.label}</Text>
+        </Pressable>
+      ))}
       <Pressable onPress={() => setSongOpen(true)} style={[styles.item, { backgroundColor: t.surface, borderColor: t.line }]} accessibilityRole="button">
         <MusicIcon color={t.music} size={20} />
         <Text style={{ color: t.ink, fontSize: 14 }}>{ja ? '曲 (Spotify)' : 'Song (Spotify)'}</Text>

@@ -30,3 +30,8 @@ function use<T>(name: string): Promise<T | null> {
 
 export const getDictation = () => use<Dictation>('dictation');
 export const getDownloads = () => use<Downloads>('downloads');
+
+export type Sample = ((input: string, opts?: { images?: Blob[]; modelTier?: 'quick' | 'default' | 'complex' }) => Promise<{ text: string }>) & {
+  limits(): Promise<{ images: boolean }>;
+};
+export const getSample = () => use<Sample>('sample');
